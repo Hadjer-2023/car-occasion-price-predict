@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block content %}
+
+<p>
+    Connexion 
+</p>
+
+<div id="example-graph"></div>
+
+<script type="text/javascript">
+    var data = {{ graph | safe }};
+    var layout = {{ graph | safe }};
+    Plotly.newPlot('example-graph', data, layout);
+</script>
+
+<p>
+    <a href="/register">
+        Inscription
+    </a>
+</p>
+
+{% endblock %}
