@@ -1,30 +1,65 @@
+# main.py
 
-from joblib import load
-from typing import Optional
-from fastapi import FastAPI
+from fastapi import FastAPI, Form, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from sklearn.datasets import load_iris
-
-# laod dataset 
-iris = load_iris()
-
-# load model
-model = load('model.joblib')
+import joblib
+from fastapi import HTTPException
 
 app = FastAPI()
 
-# define class to make request
-class request_body(BaseModel):
-    sepal_length : float
-    sepal_width : float
-    petal_length : float
-    petal_width : float
+# Load the prediction model from the file model.joblib
+model = joblib.load("model.joblib")
 
-# define route: http://127.0.0.1:8000/predict
-@app.post("/predict") 
+templates = Jinja2Templates(directory="C:\\Users\\Utilisateur2\\Documents\\FORM-DEVIA\\4-260224-220324 REGRESSION-CLUSTERING\\5Projet\\car-occasion-price-predict\\web\\templates\\")
 
-# define prédiction
-def predict(data : request_body):
-    to_predict = [[ data.sepal_length, data.sepal_width, data.petal_length, data.petal_width ]]
-    prediction = model.predict(to_predict)[0]
-    return {'class' : iris.target_names[prediction]}
+class PredictionForm(BaseModel):
+    year: int
+    kilometers_driven: int
+    fuel_type: str
+    transmission: str
+    owner_type: str
+    mileage: float
+    engine: int
+    power: float
+    seats: int
+
+# Example data for testing
+example_data = {
+    "year": 2014,
+    "kilometers_driven": 40929,
+    "fuel_type": "CNG",
+    "transmission": "Manual",
+    "owner_type": "First",
+    "mileage": 32.26,
+    "engine": 998,
+    "power": 58.2,
+    "seats": 4
+}
+
+@app.post("/predict", response_class=HTMLResponse)
+async def predict(form: PredictionForm = Form(...)):
+    try:
+        # Prepare data for prediction
+        features = [form.year, form.kilometers_driven, form.fuel_type, form.transmission, form.owner_type, form.mileage, form.engine, form.power, form.seats]
+
+        # Make prediction
+        predicted_price = model.predict([features])[0]
+
+        # Return the result to the prediction.html page
+        return templates.TemplateResponse("prediction.html", {"predicted_price": predicted_price})
+    except HTTPException as e:
+        # Print the error details to the console
+        print(f"An error occurred: {e}")
+        
+        # Return validation details as JSON
+        return JSONResponse(content={"detail": e.errors()}, status_code=e.status_code)
+    except Exception as e:
+        # Handle other exceptions
+        print(f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+@app.get("/prediction", response_class=HTMLResponse)
+async def render_prediction_page(request: Request):
+    return templates.TemplateResponse("prediction.html", {"request": request, "example_data": example_data})

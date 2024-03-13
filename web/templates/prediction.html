@@ -1,0 +1,61 @@
+<!-- C:\arch\web\templates\prediction.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Form</title>
+</head>
+<body>
+    <h1>Prediction Form</h1>
+    <form action="/predict" method="post">
+        <label for="year">Year:</label>
+        <input type="text" id="year" name="year" value="{{ form.year if form else example_data.year }}" required>
+
+        <label for="kilometers_driven">Kilometers Driven:</label>
+        <input type="text" id="kilometers_driven" name="kilometers_driven" value="{{ form.kilometers_driven if form else example_data.kilometers_driven }}" required>
+
+        <label for="fuel_type">Fuel Type:</label>
+        <select id="fuel_type" name="fuel_type" required>
+            <option value="Petrol" {% if form and form.fuel_type == 'Petrol' %}selected{% endif %}>Petrol</option>
+            <option value="Diesel" {% if form and form.fuel_type == 'Diesel' %}selected{% endif %}>Diesel</option>
+            <option value="CNG" {% if form and form.fuel_type == 'CNG' %}selected{% endif %}>CNG</option>
+        </select>
+
+        <label for="transmission">Transmission:</label>
+        <select id="transmission" name="transmission" required>
+            <option value="Manual" {% if form and form.transmission == 'Manual' %}selected{% endif %}>Manual</option>
+            <option value="Automatic" {% if form and form.transmission == 'Automatic' %}selected{% endif %}>Automatic</option>
+        </select>
+
+        <label for="owner_type">Owner Type:</label>
+        <select id="owner_type" name="owner_type" required>
+            <option value="First" {% if form and form.owner_type == 'First' %}selected{% endif %}>First</option>
+            <option value="Second" {% if form and form.owner_type == 'Second' %}selected{% endif %}>Second</option>
+        </select>
+
+        <label for="mileage">Mileage:</label>
+        <input type="text" id="mileage" name="mileage" value="{{ form.mileage if form else example_data.mileage }}" required>
+
+        <label for="engine">Engine:</label>
+        <input type="text" id="engine" name="engine" value="{{ form.engine if form else example_data.engine }}" required>
+
+        <label for="power">Power:</label>
+        <input type="text" id="power" name="power" value="{{ form.power if form else example_data.power }}" required>
+
+        <label for="seats">Seats:</label>
+        <input type="text" id="seats" name="seats" value="{{ form.seats if form else example_data.seats }}" required>
+
+        <button type="submit">Predict</button>
+    </form>
+
+    <!-- Affichez le résultat après la soumission du formulaire -->
+    {% if predicted_price %}
+    <div>
+        <h2>Prediction Result:</h2>
+        <p>Predicted Price: {{ predicted_price }}</p>
+    </div>
+    {% endif %}
+</body>
+</html>
