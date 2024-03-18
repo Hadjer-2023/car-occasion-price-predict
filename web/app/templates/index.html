@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% set href = '/login' %}
+{% set button = 'Connexion' %}
+{% include 'navbar.html' %}
+
+{% block content %}
+    <div class="index_content">
+        <p class="speech">{{ speech }}</p>
+        <!-- <img src="{{ url_for('static', filename='img/home.webp') }}" /> -->
+    </div>
+    <div class="index_anim"></div>
+{% endblock %}

@@ -132,6 +132,8 @@ include/
 lib/
 lib64/
 pyvenv.cfg
+web/lab.py
+web/migrations
 
 # Spyder project settings
 .spyderproject

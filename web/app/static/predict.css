@@ -1,0 +1,154 @@
+
+.wrapper_predict {
+    padding-top: 110px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form_predict {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 100px;
+}
+
+#form_message {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 80px;
+    font-size: 21px;
+    font-weight: bold;
+    color: var(--brown);
+}
+
+.wrapper_predict_form {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+#left {
+    width: 50%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.wrapper_left {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.wrapper_left > div {
+    /* width: 100%; */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0px 0px;
+}
+
+.wrapper_predict label {
+    font-weight: bold;
+    color: var(--white);
+}
+
+.wrapper_predict_form input, .wrapper_predict_form select {
+    width: 280px;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    /* color: var(--primary_dark); */
+    font-weight: bold;
+}
+
+.wrapper_predict_form input {
+    border-radius: 20px;
+}
+
+.input_data:focus { 
+    outline-color: var(--primary_dark);
+}
+
+.wrapper_predict button {
+    width: 150px;
+    margin-top: 20px;
+    padding: 10px 15px;
+    background: var(--white);
+    color: var(--dark);
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 20px;
+}
+
+.wrapper_predict button:hover {
+    background: var(--primary_dark);
+    color: var(--white)
+}
+
+#right {
+    width: 50%;
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 0px;
+}
+
+#historic {
+    width: 70%;
+    height: auto;
+    border-radius: 4px;
+    background: var(--primary_dark);
+    color: var(--white);
+}
+
+#historic > p {
+    width: 100%;
+    text-align: center;
+    padding: 16px 0px;
+    font-size: 21px;
+    font-weight: bold;
+    color: var(--white);
+}
+
+.formatted_historic {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 5px 30px 20px 30px;
+    font-weight: bold;
+    font-size: 18px;
+    color: var(--white);
+}
+
+.formatted_historic > span {
+    width: 100%;
+}
+
+.estimated_price {
+    width: 100%;
+    text-align: right;
+    font-size: 21px;
+    font-weight: bold;
+    color: var(--brown);
+}
+
+@media (max-width: 1024px) { 
+    .wrapper_predict_form {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    #left {
+        width: 100%;
+        justify-content: center;
+    }
+
+    #right {
+        width: 100%;
+        justify-content: center;
+        margin-top: 80px;
+    }
+}
