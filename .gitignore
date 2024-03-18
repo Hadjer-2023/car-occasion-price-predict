@@ -130,7 +130,7 @@ venv.bak/
 bin/
 include/
 lib/
-lib64/
+lib64
 pyvenv.cfg
 web/lab.py
 web/migrations
