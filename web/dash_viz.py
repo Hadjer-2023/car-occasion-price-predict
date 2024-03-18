@@ -4,7 +4,6 @@ import os
 import dash
 from dash import html, dcc, no_update
 from dash.dependencies import Input, Output, State
-import dash_bootstrap_components as dbc
 
 import numpy as np 
 import pandas as pd

@@ -9,7 +9,7 @@ from fastapi.templating import Jinja2Templates
 from livereload import Server
 
 from pydantic import BaseModel, Field
-from jose import JWTError, jwt
+from joselib import jwt
 from passlib.context import CryptContext
 
 from datetime import datetime, timedelta, timezone
