@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% set user = 'yes' %}
+{% set menu_href = '/predict' %}
+{% set menu_button = 'Prédire' %}
+{% set href = '/logout' %}
+{% set button = 'Déconnexion' %}
+{% set name = name %}
+{% include 'navbar.html' %}
+
+{% block content %}
+    <div class="wrapper_iframe">
+        <iframe src="http://localhost:8050/" width="100%" height="500px"></iframe>
+    </div>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% set user = 'yes' %}
+{% set menu_href = '/dashboard' %}
+{% set menu_button = 'Tableau de bord' %}
+{% set href = '/logout' %}
+{% set button = 'Déconnexion' %}
+{% set name = name %}
+{% include 'navbar.html' %}
+
+{% block content %}
+    <div class="wrapper_predict">
+        <div class="form_predict" id="form_predict">
+            <p id="form_message"></p>
+            <div id="wrapper_predict_form" class="wrapper_predict_form">
+
+                <div id="left">
+                    <div class="wrapper_left">
+                        <div>
+                            <label>
+                                Marque
+                            </label>
+                            <select id="brands" name="Name" class="input_data">
+                            </select>
+                        </div>
+                        <div>
+                            <label for="Year">
+                                Année
+                            </label>
+                            <input id="Year" type="number" name="Year" class="input_data"/>
+                        </div>
+                        <div>
+                            <label for="Kilometers_Driven">
+                                Km parcourus
+                            </label>
+                            <input id="Kilometers_Driven" type="number" name="Kilometers_Driven" class="input_data"/>
+                        </div>
+                        <div>
+                            <label>
+                                Type de carburant
+                            </label>
+                            <select name="Fuel_Type" class="input_data">
+                                <option value="CNG">CNG</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="Electric">Électrique</option>
+                                <option value="LPG">GPL</option>
+                                <option value="Petrol">Pétrole</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>
+                                Transmission
+                            </label>
+                            <select name="Transmission" class="input_data">
+                                <option value="Manual">Manuel</option>
+                                <option value="Automatic">Automatique</option>
+                            </select>
+                        </div>
+                        <button id="button_estimate">
+                            Estimer
+                        </button>
+                    </div>
+                </div>
+
+                <div id="right">
+                    <div id="historic">
+                        <p>Historique des estimations</p>
+                        <div id="content_historic">
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading">
+            <p id="loading_message"></p>
+            <div class="loader_wrapper">
+                <svg
+                    class="car_image"
+                    width="100%"
+                    height="100%"
+                    viewBox="0 0 102 40"
+                >
+                    <g
+                        transform="translate(2 1)"
+                        stroke="#002742"
+                        fill="none"
+                        fillRule="evenodd"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        <path
+                            d="M47.293 2.375C52.927.792 54.017.805 54.017.805c2.613-.445 6.838-.337 9.42.237l8.381 1.863c2.59.576 6.164 2.606 7.98 4.531l6.348 6.732 6.245 1.877c3.098.508 5.609 3.431 5.609 6.507v4.206c0 .29-2.536 4.189-5.687 4.189H36.808c-2.655 0-4.34-2.1-3.688-4.67 0 0 3.71-19.944 14.173-23.902zM36.5 15.5h54.01"
+                            strokeWidth="3"
+                        />
+                        <ellipse strokeWidth="3.2" fill="#FFF" cx="83.493" cy="30.25" rx="6.922" ry="6.808" />
+                        <ellipse strokeWidth="3.2" fill="#FFF" cx="46.511" cy="30.25" rx="6.922" ry="6.808" />
+                        <path class="line top" d="M22.5 16.5H2.475" strokeWidth="3" />
+                        <path class="line middle" d="M20.5 23.5H.4755" strokeWidth="3" />
+                        <path class="line bottom" d="M25.5 9.5h-19" strokeWidth="3" />
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </div>
+{% endblock %}
