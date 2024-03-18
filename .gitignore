@@ -135,6 +135,7 @@ pyvenv.cfg
 web/lab.py
 web/migrations
 
+
 # Spyder project settings
 .spyderproject
 .spyproject
