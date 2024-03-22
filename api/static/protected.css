@@ -121,7 +121,7 @@ nav {
 */
 
 .wrapper_train {
-    padding-top: 110px;
+    padding-top: 40px;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -146,7 +146,7 @@ nav {
 #form_message {
     width: 100%;
     text-align: center;
-    margin-bottom: 80px;
+    margin-bottom: 40px;
     font-size: 21px;
     font-weight: bold;
     color: var(--brown);
@@ -198,6 +198,53 @@ nav {
     outline-color: var(--primary_dark);
 }
 
+
+.info_hyparams {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    color: var(--brown);
+    margin-top: 30px;
+    margin-bottom: 15px;
+}
+
+.info_hyparams > p {
+    display: flex;
+    align-items: center;
+    width: 25px;
+    height: 25px;
+    padding: 10px;
+    border-radius: 50%;
+    margin: 0px 10px;
+    background: var(--primary_dark);
+}
+
+.div_hyparams {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0px 0px;
+    margin-left: 40px;
+}
+
+.div_hyparams label {
+    font-weight: bold;
+    color: var(--primary_dark);
+}
+
+.div_hyparams input { 
+    width: 320px;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    background: var(--primary);
+    color: var(--white);
+    font-weight: bold;
+}
+
+.div_hyparams input:focus { 
+    outline-color: var(--primary_dark);
+}
+
 .wrapper_train button {
     width: 150px;
     margin-top: 20px;
@@ -219,12 +266,13 @@ nav {
     display: flex;
     justify-content: flex-start;
     margin-top: 0px;
+    min-height: 350px;
 }
 
 #historic {
     width: 70%;
     height: auto;
-    border-radius: 4px;
+    border-radius: 10px;
     background: var(--primary_dark);
     color: var(--white);
 }
@@ -235,7 +283,7 @@ nav {
     padding: 16px 0px;
     font-size: 21px;
     font-weight: bold;
-    color: var(--white);
+    color: var(--dark);
 }
 
 .formatted_historic {
@@ -249,7 +297,8 @@ nav {
 }
 
 .formatted_historic > p {
-    padding: 5px 0px 0px 20px;
+    width: 100%;
+    padding: 0px 0px 0px 25px;
     color: var(--brown);
 }
 
@@ -257,12 +306,40 @@ nav {
     width: 100%;
 }
 
-.estimated_price {
-    width: 100%;
-    text-align: right;
-    font-size: 21px;
+.formatted_historic > .hyparams {
+    padding-left: 50px;
+}
+
+.sended_hyparams {
+    font-size: 14px;
+    color: var(--white) !important;
+}
+
+#best_scores {
+    display: none;
+    width: 350px;
+    margin-top: 60px;
+    padding: 20px;
+    border-radius: 10px;
+    background: var(--brown);
+    color: var(--white);
+}
+
+#best_scores > h4 {
+    margin-bottom: 20px;
+    text-decoration: underline;
+    text-align: center;
+    font-size: 18px;
     font-weight: bold;
-    color: var(--brown);
+}
+
+
+#best_scores div:nth-of-type(1) {
+    margin-bottom: 20px;
+}
+
+#best_scores div:nth-of-type(2) {
+    margin-top: 20px;
 }
 
 @media (max-width: 1024px) { 
@@ -296,7 +373,8 @@ nav {
 
 #loading_message {
     width: 100%;
-    margin-top: 60px;
+    margin-top: 130px;
+    margin-bottom: 60px;
     text-align: center;
     font-size: 21px;
     color: var(--dark);
@@ -304,6 +382,7 @@ nav {
 
 .loader_wrapper {
 	position: absolute;
+    margin-top: 80px;
 	width: 10em;
 	left: 48%;
 	top: 35%;

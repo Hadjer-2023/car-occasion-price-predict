@@ -1,188 +1,310 @@
 
 import os
+import time
+import json
 import numpy as np 
 import pandas as pd
+import matplotlib.pyplot as plt
+import joblib
 
-from sklearn.impute import SimpleImputer
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.feature_selection import RFECV
+from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
+from sklearn.feature_selection import RFE, RFECV
+from sklearn.ensemble import RandomForestRegressor, AdaBoostRegressor, GradientBoostingRegressor
+from sklearn.linear_model import Ridge, Lasso, ElasticNet, LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.linear_model import LinearRegression
-from sklearn.cluster import KMeans
-from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import GradientBoostingRegressor
 
-from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+#   > MAIN VARIABLES
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-train_data = os.path.join(basedir, "../data/train.csv")
-test_data = os.path.join(basedir, "../data/test.csv")
+base_dir = os.path.abspath(os.path.dirname(__file__))
+csv_data = os.path.join(base_dir, "../data/train.csv")
 
-def load_data():
-    df_train = pd.read_csv(train_data)
-    df_test = pd.read_csv(test_data)
-    return df_train, df_test
+df_original = pd.read_csv(csv_data)
 
-def preprocess_data(df_train, df_test):
-    features = ['Year', 'Kilometers_Driven', 'Mileage', 'Engine', 'Power', 'Seats', 'Fuel_Type', 'Transmission', 'Owner_Type']
-    # Vectoriser la colonne "Name" en utilisant TF-IDF
-    vectorizer = TfidfVectorizer()
-    X_train_name = vectorizer.fit_transform(df_train['Name'])
-    X_test_name = vectorizer.transform(df_test['Name'])
-    # Appliquer le clustering k-means
-    kmeans = KMeans(n_clusters=10)
-    kmeans.fit(X_train_name)
-    # Ajouter les étiquettes de cluster à la colonne "Name"
-    df_train['Name_Cluster'] = kmeans.labels_
-    df_test['Name_Cluster'] = kmeans.predict(X_test_name)
-    # Nettoyer et préparer les données
-    # train
-    df_train['Engine'] = df_train['Engine'].str.replace(' CC', '', regex=False)
-    df_train['Mileage'] = df_train['Mileage'].str.replace(' kmpl| km/kg', '', regex=True).astype(float)
-    df_train['Power'] = df_train['Power'].str.replace(' bhp', '').replace('null', np.nan).astype(float)
-    # test
-    df_test['Engine'] = df_test['Engine'].str.replace(' CC', '', regex=False)
-    df_test['Mileage'] = df_test['Mileage'].str.replace(' kmpl| km/kg', '', regex=True).astype(float)
-    df_test['Power'] = df_test['Power'].str.replace(' bhp', '').replace('null', np.nan).astype(float)
-    # Supprimer la colonne New_Price
-    df_train = df_train.drop(['New_Price'], axis=1)
-    df_test = df_test.drop(['New_Price'], axis=1)
-    # Séparer les données d'entraînement en features et cible
-    X_train = df_train[features + ['Name_Cluster']]
-    y_train = df_train['Price']
-    # Séparer les données de test en features seulement
-    X_test = df_test[features + ['Name_Cluster']]
+DECIMALS = 4
 
-    return X_train, y_train, X_test
+MODELS = {
+    "lr": { "class_": LinearRegression, "name": "LinearRegression" },
+    "l": { "class_": Lasso, "name": "Lasso" },
+    "r": { "class_": Ridge, "name": "Ridge" },
+    "en": { "class_": ElasticNet, "name": "ElasticNet" },
+    "abr": { "class_": AdaBoostRegressor, "name": "AdaBoostRegressor" },
+    "gbr": { "class_": GradientBoostingRegressor, "name": "GradientBoostingRegressor" },
+    "rfr": { "class_": RandomForestRegressor, "name": "RandomForestRegressor" }
+}
 
-def train_and_evaluate_model(X, y):
-    pipeline = create_pipeline()
-    # Diviser les données d'entraînement en ensembles d'entraînement et de validation
-    X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
-    # Entraîner le modèle sur les données d'entraînement
-    pipeline.fit(X_train, y_train)
-    # Évaluer les performances du modèle sur les données de validation
-    score = pipeline.score(X_val, y_val)
-    print('Score de la pipeline sur les données de validation :', score)
-    # Faire des prédictions sur les données de validation
-    y_pred = pipeline.predict(X_val)
-    # Coefficient de détermination (R²)
-    r2 = r2_score(y_val, y_pred)
-    print("R² :", r2)
-    # Erreur moyenne absolue (MAE)
-    mae = mean_absolute_error(y_val, y_pred)
-    print("MAE :", mae)
-    # Erreur quadratique moyenne (MSE)
-    mse = mean_squared_error(y_val, y_pred)
-    print("MSE :", mse)
-    # Erreur quadratique moyenne racine (RMSE)
+HYPER_PARAMETERS = {
+    "lr": {},
+    "l": { "alpha": [0.1, 1.0, 10.0] },
+    "r": { "alpha": [0.1, 1.0, 10.0] },
+    "en": { "alpha": [0.1, 1.0, 10.0], "l1_ratio": [0.1, 0.5, 0.9] },
+    "abr": { "n_estimators": [50, 100, 200], "learning_rate": [0.01, 0.1, 1.0] },
+    "gbr": { "n_estimators": [50, 100, 200], "learning_rate": [0.01, 0.1, 1.0] },
+    "rfr": { "n_estimators": [10, 50, 100], "max_depth": [3, 5, 10] }
+}
+
+
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+#   > CLEANING
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+def clean_df(print_diff=True):
+    df_cleaned = df_original.copy()
+    df_cleaned = df_cleaned.drop('New_Price', axis=1)
+    df_cleaned['Name'] = df_cleaned['Name'].str.split().str[0]
+    df_cleaned['Owner_Type'] = df_cleaned['Owner_Type'].str.split().str[0]
+    df_cleaned['Year'] = df_cleaned['Year'].astype(float)
+    df_cleaned['Kilometers_Driven'] = df_cleaned['Kilometers_Driven'].astype(float)
+    df_cleaned['Mileage'] = df_cleaned['Mileage'].str.extract(r'(\d+\.?\d*)').astype(float)
+    df_cleaned['Engine'] = df_cleaned['Engine'].str.extract(r'(\d+\.?\d*)').astype(float)
+    df_cleaned['Power'] = df_cleaned['Power'].str.extract(r'(\d+\.?\d*)').astype(float)
+    df_cleaned.replace('null', pd.NA, inplace=True)
+    df_cleaned = df_cleaned.dropna()
+    if print_diff:
+        display_diff(df_original, df_cleaned)
+
+    return df_cleaned
+
+
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+#   > PREPROCESSING
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+def preprocess(args={}):
+    args = get_args({ 
+
+        "print_args": True,
+        "title": "preprocess",
+        "print_preprocessor": False,
+        # NUMERIC
+        "imputer_num": False,
+        "imputer_num_strategy": "median",
+        # CATEGORICAL
+        "imputer_cat": False,
+        "imputer_cat_strategy": "constant",
+        "imputer_cat_fill": "missing",
+        "one_hot_handle": "ignore"
+
+    }, args)
+
+    transformers = []
+
+    # ---- ---- NUMERIC
+    if "num" in args:
+        steps_num = [('scaler', StandardScaler())]
+        if args["imputer_num"]:
+            steps_num.insert(0, ('imputer', SimpleImputer(strategy=args["imputer_num_strategy"])))
+        numeric_pipeline = Pipeline(steps=steps_num)
+        transformers.append(('num', numeric_pipeline, args["num"]))
+
+    # ---- ---- CATEGORICAL
+    if "cat" in args:
+        steps_cat = [('onehot', OneHotEncoder(handle_unknown=args["one_hot_handle"]))]
+        if args["imputer_cat"]:
+            steps_cat.insert(0, ('imputer', SimpleImputer(strategy=args["imputer_cat_strategy"], fill_value=args["imputer_cat_fill"])))
+        categorical_pipeline = Pipeline(steps=steps_cat)
+        transformers.append(('cat', categorical_pipeline, args["cat"]))
+
+    preprocessor = ColumnTransformer(transformers=transformers)
+
+    display_preprocessor(preprocessor) if args["print_preprocessor"] else None
+
+    return preprocessor
+
+
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+#   > TRAINING && SCORING
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+def train(model, process, hyparams, feature_selection=False):
+    try:
+        args = get_args({ 
+
+            "print_args": True,
+            "title": "Training " + model + " with process " + process
+
+        }, { "model": model, "process": process, "hyparams": hyparams, "feature_selection": feature_selection })
+
+        # clean
+        df_cleaned = clean_df()
+        # split
+        train_test = get_train_test(df_cleaned)
+        # preprocess
+        preprocessor = preprocess({
+            "num": train_test["X"].select_dtypes(include=['float64']).columns, 
+            "cat": train_test["X"].select_dtypes(include=['object']).columns,
+            "imputer_num": True, 
+            "imputer_cat": True
+        })
+
+        print(MODELS[model])
+
+        # train_model = (MODELS[model][class_](), HYPER_PARAMETERS[model]) if process == "gs" else (MODELS[model][class_](), {})
+        train_model = (MODELS[model]["class_"](), hyparams) if process == "gs" else (MODELS[model]["class_"](), {})
+
+        X, y, X_train, X_test, y_train, y_test = train_test["X"], train_test["y"], train_test["X_train"], train_test["X_test"], train_test["y_train"], train_test["y_test"]
+        
+        steps = [('preprocessor', preprocessor), ('model', train_model[0])]
+        
+        if feature_selection:
+            steps.insert(1, ('feature_selection', RFECV(estimator=train_model[0], scoring='r2')))
+
+        pipeline = Pipeline(steps)
+
+        scoring = {}
+        name = MODELS[model]["name"]
+        start_time = time.time()
+        if process == "gs":
+            scoring = get_grid_scores(name, train_model[1], pipeline, X_train, y_train, X_test, y_test)
+        else:
+            scoring = get_cross_scores(name, pipeline, X_train, y_train, X_test, y_test)
+
+        end_time = time.time()
+
+        scoring["execution_time"] = end_time - start_time
+
+        return scoring
+
+    except Exception as e:
+        print()
+        print()
+        print(" > Fail: ")
+        print(e)
+        print()
+        print()
+        return { "fail": True, "message": "Une erreur est survenue durant l'entaînement" }
+
+
+def get_grid_scores(name, hyper_params, pipeline, X_train, y_train, X_test, y_test):
+    hyper_params = {f'model__{param_name}': param_values for param_name, param_values in hyper_params.items()}
+    grid_search = GridSearchCV(pipeline, hyper_params, cv=5, scoring='r2')
+    
+    grid_search.fit(X_train, y_train)
+
+    joblib.dump(grid_search.best_estimator_, "./tmp/" + name + "_grid_search.joblib")
+
+    y_pred = grid_search.predict(X_test)
+
+    mae = mean_absolute_error(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
     rmse = np.sqrt(mse)
-    print("RMSE :", rmse)
+    r2_grid = grid_search.score(X_test, y_test)
+    best_score = grid_search.best_score_
+    best_params = grid_search.best_params_
+    _best_params = { key.replace('model__', ''): value for key, value in best_params.items() }
 
-    # return pipeline
-    return {
-        "r2": r2,
-        "mae": mae,
-        "mse": mse,
-        "rmse": rmse
-    }
+    display_scoring({ 
+        "model": name, "mae": mae, "mse": mse, "rmse": rmse, "r2_grid": r2_grid, 
+        "best_score": best_score, "best_params": _best_params 
+    })
 
-def create_pipeline():
-    num_cols = ['Year', 'Kilometers_Driven', 'Mileage', 'Engine', 'Power', 'Seats']
-    cat_cols = ['Fuel_Type', 'Transmission', 'Owner_Type', 'Name_Cluster']
-    # Définir les transformations pour les colonnes numériques et catégorielles
-    num_pipeline = Pipeline([
-        ('imputer', SimpleImputer(strategy='mean')),
-        ('scaler', StandardScaler())
-    ])
-    cat_pipeline = Pipeline([
-        ('imputer', SimpleImputer(strategy='constant', fill_value='missing')),
-        ('onehot', OneHotEncoder(handle_unknown='ignore'))
-    ])
-    # Combiner les transformations en une seule étape de prétraitement
-    preprocessor = ColumnTransformer([
-        ('num', num_pipeline, num_cols),
-        ('cat', cat_pipeline, cat_cols)
-    ])
-    # Définir le modèle de régression
-    model = GradientBoostingRegressor(random_state=42)
-    # Créer la pipeline
-    pipeline = Pipeline([
-        ('preprocessor', preprocessor),
-        ('model', model)
-    ])
-
-    return pipeline
-
-def predict_test_data(pipeline, df_test):
+    return { "mae": mae, "mse": mse, "rmse": rmse, "r2_grid": r2_grid, "best_score": best_score, "best_params": _best_params }
 
 
-    features = ['Year', 'Kilometers_Driven', 'Mileage', 'Engine', 'Power', 'Seats', 'Fuel_Type', 'Transmission', 'Owner_Type']
+def get_cross_scores(name, pipeline, X_train, y_train, X_test, y_test):
+    r2_scores = cross_val_score(pipeline, X_train, y_train, cv=5, scoring='r2')
+    r2_cross_mean = r2_scores.mean()
 
-    # Transformer les données de test à l'aide du pipeline
-    df_test = df_test[features + ['Name_Cluster']]
-    X_test = pipeline.named_steps['preprocessor'].transform(df_test)
+    pipeline.fit(X_train, y_train)
 
-    # Faire des prédictions sur les données de test
-    y_pred = pipeline.named_steps['model'].predict(X_test)
+    joblib.dump(pipeline, "./tmp/" + name + "_cross_val.joblib")
 
-    return y_pred
+    y_pred = pipeline.predict(X_test)
 
-def gradient_boosting_regressor(hyper_params):
-    # Charger les données
-    df_train, df_test = load_data()
-    # Prétraiter les données
-    X, y, df_test = preprocess_data(df_train, df_test)
-    # Entraîner et évaluer le modèle
-    scoring = train_and_evaluate_model(X, y)
-    return scoring 
+    mae = mean_absolute_error(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
+    rmse = np.sqrt(mse)
+    r2_cross_pred = r2_score(y_test, y_pred)
 
-def train(model, hyper_params):
+    display_scoring({ "model": name, "mae": mae, "mse": mse, "rmse": rmse, "r2_cross_pred": r2_cross_pred, "r2_cross_mean": r2_cross_mean })
+
+    return { "mae": mae, "mse": mse, "rmse": rmse, "r2_cross_mean": r2_cross_mean, "r2_cross_pred": r2_cross_pred }
+
+
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+#   > UTILS
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+def get_args(params, args):
+    if args is None:
+        args = params
+    else:
+        params.update(args)
+        args = params
+
+    display_args(args) if args["print_args"] else None
+
+    return args
+
+
+def get_train_test(df, args={}):
+    args = get_args({ 
+
+        "print_args": True,
+        "title": "get_train_test",
+        "to_drop": ["Price"],
+        "target": "Price",
+        "test_size": 0.2,
+        "random_state": 0
+
+    }, args)
+
+    X = df.drop(columns=args["to_drop"])
+    y = df[args["target"]]
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=args["test_size"], random_state=args["random_state"])
+
+    return { "X": X, "y": y, "X_train": X_train, "X_test": X_test, "y_train": y_train, "y_test": y_test }
+
+
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+#   > DISPLAY
+# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+def display_diff(df, df_cleaned):
     print()
+    print('    > DF SHAPE: ', df.shape)
     print()
-    print(model)
-    print(hyper_params)
+    print('    > DF CLEANED SHAPE: ', df_cleaned.shape)
     print()
+
+
+def display_args(args):
+    title = args["title"]
+    print('')
+    print(' > Args for ' + title + ':')
+    del args["title"]
+    del args["print_args"]
+    for key, value in args.items():
+        print(f"    {key}: {value}")
+    print('')
+    print(' --- ' + title + ' in progress...')
+    print('')
+
+
+def display_preprocessor(preprocessor):
+    print('')
+    print('Preprocessor: ')
+    print('')
+    print(preprocessor)
+    print('')
+
+
+def display_scoring(data):
     print()
-    # return { "back": "ok" }
-    return gradient_boosting_regressor('')
-
-
-
-
-
-# # load dataset 
-# iris = load_iris()
-
-# # features && target
-# X = iris.data
-# y = iris.target
-
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
-
-# # train model
-# model = LogisticRegression(multi_class="auto", max_iter=100)
-# model.fit(X_train, y_train)
-
-# # score
-# model.score(X_train, y_train)
-
-# # predictions
-# y_pred = model.predict(X_test)
-# accuracy = accuracy_score(y_test, y_pred)
-
-# print()
-# print(' > Predictions')
-# print(y_pred)
-# print()
-# print(' > Accuracy: ' + str(accuracy))
-# print()
-
-# dump(model, 'model.joblib')
-
-# print(' > Model saved successfull')
-# print()
+    print(' > Scoring for ' + data["model"] + ':')
+    formatted = ""
+    del data["model"]
+    for metric, value in data.items():
+        display = ""
+        if isinstance(value, (int, float, np.float64)):
+            display = "{:.{}f}".format(value, DECIMALS)
+        else:
+            display = str(value)
+        print("    " + metric +  ": " + display)
+    print()

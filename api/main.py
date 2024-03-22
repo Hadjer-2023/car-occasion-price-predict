@@ -1,5 +1,7 @@
 
 import os
+import pandas as pd
+import joblib
 
 from fastapi import Depends, FastAPI, HTTPException, status, Request
 from fastapi.responses import JSONResponse
@@ -14,13 +16,13 @@ from passlib.context import CryptContext
 
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional, Dict, Any
-from joblib import load
 
 from train import train 
 
+
 """ 
     ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
-    > SETUP APP
+    > SETUP APP && MAIN VARIABLES
     ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 """ 
 
@@ -44,7 +46,10 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 10
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-the_model = os.path.join(basedir, "../data/gradient_boosting_regressor.pkl")
+
+MODELS = ["lr", "l", "r", "en", "abr", "gbr", "rfr"]
+PROCESSES = ["cv", "gs"]
+
 
 """ 
     ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
@@ -74,13 +79,20 @@ class Dev(BaseModel):
     name: str = Field(default=None)
     password: str = Field(default=None)
 
-# Name,Location,Year,Kilometers_Driven,Fuel_Type,Transmission,Owner_Type,Mileage,Engine,Power,Seats,New_Price,Price
+
 class Predict(BaseModel):
     brand: str = Field(default=None)
+    location: str = Field(default=None)
     year: str = Field(default=None)
     kilometers: str = Field(default=None)
     fuel: str = Field(default=None)
     transmission: str = Field(default=None)
+    owner_type: str = Field(default=None)
+    engine: str = Field(default=None)
+    power: str = Field(default=None)
+    seats: str = Field(default=None)
+    mileage: str = Field(default=None)
+
 
 class Model(BaseModel):
     model: str = Field(default=None)
@@ -97,6 +109,7 @@ class Model(BaseModel):
 def dev(request: Request):
     context = { "request": request, "message": "Dev Zone" }
     return templates.TemplateResponse("index.html", context)
+
 
 @app.post("/auth")
 async def login(dev: Dev, request: Request):
@@ -128,15 +141,13 @@ async def get_current_dev(access_token):
 
     return dev
 
+
 @app.get("/protected/{access_token}")
 async def protected(request: Request, access_token: str, dev: dict = Depends(get_current_dev)):
     print(dev)
     context = { "request": request, "dev": dev['name'] }
     return templates.TemplateResponse("protected.html", context)
 
-# @app.get("/protected")
-# async def protected(dev: dict = Depends(get_current_dev)):
-    # return { "message": "ok access" }
 
 @app.post("/train")
 async def train_protected(request: Request):
@@ -147,7 +158,13 @@ async def train_protected(request: Request):
     dev = get_dev_from_db(data['access_token'])
     if dev is None:
         return { "fail": "not_allowed" }
-    return train(data['model'], data['hyper_params'])
+    model = data["model"]
+    process = data["process"]
+    hyparams = data["hyparams"]
+    if model in MODELS and process in PROCESSES:
+        return train(model, process, hyparams)
+    else: 
+        return { "fail": True, "message": "Model ou process incorrect" }
 
 
 """ 
@@ -160,28 +177,35 @@ async def train_protected(request: Request):
 def options_predict():
     return JSONResponse({ "message": "Options request allowed" }, status_code=200)
 
+
 @app.post("/predict")
 def predict(data: Predict):
+    data = check_data(data)
     print(data)
-    return JSONResponse({ "back": "ok" }, status_code=200)
+    to_predict = pd.DataFrame({
 
-# from sklearn.datasets import load_iris
-# iris = load_iris()
-# model = load('model.joblib')
+        "Name": [data.brand],
+        "Location": [data.location],
+        "Year": [data.year],
+        "Kilometers_Driven": [data.kilometers],
+        "Fuel_Type": [data.fuel],
+        "Transmission": [data.transmission],
+        "Owner_Type": [data.owner_type],
+        "Mileage": [data.mileage],
+        "Engine": [data.engine],
+        "Power": [data.power],
+        "Seats": [data.seats]
 
-# # define class to make request
-# class request_body(BaseModel):
-#     sepal_length: float
-#     sepal_width: float
-#     petal_length: float
-#     petal_width: float
+    })
 
-# @app.post("/iris") 
-# def iris(data : request_body):
-#     to_predict = [[ data.sepal_length, data.sepal_width, data.petal_length, data.petal_width ]]
-#     prediction = model.predict(to_predict)[0]
-#     return {'class' : iris.target_names[prediction]}
+    # RandomForestRegressor_cross_val RandomForestRegressor_grid_search
+    # GradientBoostingRegressor_cross_val GradientBoostingRegressor_grid_search
+    the_model = "RandomForestRegressor_grid_search"
+    loaded_model = joblib.load('./tmp/' + the_model + '.joblib')
+    prediction = loaded_model.predict(to_predict)
 
+    return JSONResponse({ "prediction": prediction[0] }, status_code=200)
+ 
 
 """ 
     ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- 
@@ -198,6 +222,7 @@ def authenticate_dev(name: str, password: str):
 
     return dev
 
+
 def create_access_token(dev: dict):
     payload = {
         "sub": dev["name"],
@@ -207,11 +232,13 @@ def create_access_token(dev: dict):
 
     return access_token
 
+
 def get_dev_from_db(access_token: str):
     for dev in allowed:
         if access_token_decode(access_token).get("sub") == dev["name"]:
             return dev
     return None
+
 
 def access_token_decode(access_token: str):
     try:
@@ -221,3 +248,14 @@ def access_token_decode(access_token: str):
         raise HTTPException(status_code=401, detail="Jeton d'accès expiré")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Jeton d'accès invalide")
+
+
+def check_data(data):
+    data.year = None if len(data.year) == 0 else float(data.year)
+    data.kilometers = None if len(data.kilometers) == 0 else float(data.kilometers)
+    data.engine = None if len(data.engine) == 0 else float(data.engine)
+    data.power = None if len(data.power) == 0 else float(data.power)
+    data.seats = None if len(data.seats) == 0 else float(data.seats)
+    data.mileage = None
+    
+    return data

@@ -14,51 +14,104 @@
             <div id="wrapper_predict_form" class="wrapper_predict_form">
 
                 <div id="left">
-                    <div class="wrapper_left">
-                        <div>
-                            <label>
-                                Marque
-                            </label>
-                            <select id="brands" name="Name" class="input_data">
-                            </select>
+                    <div>
+                        <div class="wrapper_left">
+                            <div>
+                                <label>
+                                    Marque
+                                </label>
+                                <select id="brands" name="Name" class="input_data">
+                                </select>
+                            </div>
+                            <div>
+                                <label>
+                                    Lieu
+                                </label>
+                                <select id="locations" name="Location" class="input_data">
+                                </select>
+                            </div>
+                            <div>
+                                <label for="Year">
+                                    Année
+                                </label>
+                                <input id="Year" type="number" name="Year" class="input_data"/>
+                            </div>
+                            <div>
+                                <label for="Kilometers_Driven">
+                                    Km parcourus
+                                </label>
+                                <input id="Kilometers_Driven" type="number" name="Kilometers_Driven" class="input_data"/>
+                            </div>
+                            <div>
+                                <label>
+                                    Type de carburant
+                                </label>
+                                <select name="Fuel_Type" class="input_data">
+                                    <option value=""></option>
+                                    <option value="CNG">CNG</option>
+                                    <option value="Diesel">Diesel</option>
+                                    <option value="Electric">Électrique</option>
+                                    <option value="LPG">GPL</option>
+                                    <option value="Petrol">Essence</option>
+                                </select>
+                            </div>
                         </div>
-                        <div>
-                            <label for="Year">
-                                Année
-                            </label>
-                            <input id="Year" type="number" name="Year" class="input_data"/>
+                        <div class="wrapper_right">
+                            <div>
+                                <label>
+                                    Transmission
+                                </label>
+                                <select name="Transmission" class="input_data">
+                                    <option value=""></option>
+                                    <option value="Manual">Manuel</option>
+                                    <option value="Automatic">Automatique</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>
+                                    Propriétaire(s) précédent(s)
+                                </label>
+                                <select name="Owner_Type" class="input_data">
+                                    <option value=""></option>
+                                    <option value="First">1</option>
+                                    <option value="Second">2</option>
+                                    <option value="Third">3</option>
+                                    <option value="Fourth">4</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="Engine">
+                                    Moteur CC
+                                </label>
+                                <input id="Engine" type="number" name="Engine" class="input_data"/>
+                            </div>
+                            <div>
+                                <label for="Power">
+                                    Puissance BHP
+                                </label>
+                                <input id="Power" type="number" name="Power" class="input_data"/>
+                            </div>
+                            <div>
+                                <label>
+                                    Places assises
+                                </label>
+                                <select name="Seats" class="input_data">
+                                    <option value=""></option>
+                                    <option value="2">2</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                </select>
+                            </div>
                         </div>
-                        <div>
-                            <label for="Kilometers_Driven">
-                                Km parcourus
-                            </label>
-                            <input id="Kilometers_Driven" type="number" name="Kilometers_Driven" class="input_data"/>
-                        </div>
-                        <div>
-                            <label>
-                                Type de carburant
-                            </label>
-                            <select name="Fuel_Type" class="input_data">
-                                <option value="CNG">CNG</option>
-                                <option value="Diesel">Diesel</option>
-                                <option value="Electric">Électrique</option>
-                                <option value="LPG">GPL</option>
-                                <option value="Petrol">Pétrole</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label>
-                                Transmission
-                            </label>
-                            <select name="Transmission" class="input_data">
-                                <option value="Manual">Manuel</option>
-                                <option value="Automatic">Automatique</option>
-                            </select>
-                        </div>
-                        <button id="button_estimate">
-                            Estimer
-                        </button>
                     </div>
+                    <button id="button_estimate">
+                        Estimer
+                    </button>
                 </div>
 
                 <div id="right">
@@ -83,7 +136,7 @@
                 >
                     <g
                         transform="translate(2 1)"
-                        stroke="#002742"
+                        stroke="brown"
                         fill="none"
                         fillRule="evenodd"
                         strokeLinecap="round"

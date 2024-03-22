@@ -39,19 +39,35 @@
                             <div class="wrapper_left">
                                 <div>
                                     <label>
-                                        Model
+                                        Estimateur
                                     </label>
-                                    <select name="Model" class="input_data">
-                                        <option value="lr">Linear Regression</option>
-                                        <option value="gbr">Gradient Boosting Regressor</option>
+                                    <select id="select_estimator" name="Model" class="input_data">
+                                        <option value="lr">LinearRegression</option>
+                                        <option value="l">Lasso</option>
+                                        <option value="r">Ridge</option>
+                                        <option value="en">ElasticNet</option>
+                                        <option value="abr">AdaBoostRegressor</option>
+                                        <option value="gbr">GradientBoostingRegressor</option>
+                                        <option value="rfr">RandomForestRegressor</option>
                                     </select>
                                 </div>
+                                <div>
+                                    <label>
+                                        Processus
+                                    </label>
+                                    <select id="select_process" name="Process" class="input_data">
+                                        <option value="cv">Cross val score</option>
+                                        <option value="gs">Grid search cv</option>
+                                    </select>
+                                </div>
+                                <div id="hyparams"></div>
                                 <button 
                                     id="button_training"
                                     style="margin-top: 40px"
                                 >
                                     Entraîner
                                 </button>
+                                <div id="best_scores"></div>
                             </div>
                         </div>
         
